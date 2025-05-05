@@ -11,6 +11,17 @@ sync:
 train:
 	make training MODEL_NAME=yahei START_MODEL=best_eng TESSDATA=/usr/share/tesseract-ocr/5/tessdata  MAX_ITERATIONS=10000
 
+# 生成模型(best fast)
+traineddata:
+	make traineddata  MODEL_NAME=yahei
+
+# 将模型拷贝回本地
+copy_back:
+	rcp hu40:~/tools/lstm/tutorial_tesseract/tesstrain/data/yahei.traineddata ./
+
+## rcp hu40:~/tools/lstm/tutorial_tesseract/tesstrain/data/yahei/tessdata_fast/yahei_0.000_30_1300.traineddata ./
+
+
 # 绘图-训练迭代曲线图
 plot:
 	make plot MODEL_NAME=yahei START_MODEL=best_eng
