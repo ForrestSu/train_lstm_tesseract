@@ -4,10 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
+	"os"
+	"strings"
 )
-
-const fontYahei = "Microsoft YaHei"
 
 func main() {
 	var modeUsage = "[mode] 模式选择:\n" +
@@ -15,102 +14,76 @@ func main() {
 		"- pass: 识别率测试\n" +
 		"- single: 单个测试用例\n"
 	var mode string
-	flag.StringVar(&mode, "mode", "gen_test", modeUsage)
-	var font, lang, psm string
-	flag.StringVar(&font, "font", fontYahei, "字体 SimSun")
-	flag.StringVar(&lang, "lang", "eng", "模型选择：lang,yahei")
-	flag.StringVar(&psm, "psm", "13", "PageMode")
-	var limit int
-	flag.IntVar(&limit, "limit", 200, "检查数据集")
+	flag.StringVar(&mode, "mode", "gen", modeUsage)
+	var font string
+	flag.StringVar(&font, "font", "Arial", "使用字体 [gen]")
+	var n int
+	flag.IntVar(&n, "n", 200, "随机用例个数 [gen]")
+	var force bool
+	flag.BoolVar(&force, "force", false, "根据索引生成图片 [gen]")
+	// 模型识别
+	var lang, psm string
+	flag.StringVar(&lang, "lang", "eng", "模型选择：eng")
+	flag.StringVar(&psm, "psm", "13", "PageMode: 7 (单行文本) 13 (多行文本)")
 	flag.Parse()
 
 	switch mode {
-	case "prepare_pass":
-		var ans = genRandomNCase(200)
-		fmt.Println("len(ans) = ", len(ans))
-		if err := writeNCase(ans[0:limit]); err != nil {
-			log.Fatal(err)
+	case "gen": // 生成训练数据
+		tpl := template{
+			idxFile: "ground_truth.txt",
+			font:    font,
+			Seq:     groundTruthSeq{},
+			OutDir:  "tesstrain/data/arial-ground-truth/",
+			Force:   force,
 		}
-	case "pass":
-		if err := passRate(lang, psm); err != nil {
+		tpl.Gen(n)
+	case "pass": // 识别率测试
+		tpl := template{
+			idxFile: "random_case.txt",
+			font:    font,
+			Seq:     randomSeq{},
+			OutDir:  "img/",
+			Force:   force,
+		}
+		lines := tpl.Gen(n)
+		if err := passRate(tpl.OutDir, lines, lang, psm); err != nil {
 			log.Fatal(err)
 		}
 	case "single": // 单个测试用例
 		text, err := ocrText("train/0.tif", lang, psm)
 		log.Printf("err:%v text=%s\n", err, text)
-	case "gen":
-		lines := genGroundTruth()
-		fmt.Println("len(lines) = ", len(lines))
-		if err := genImgByFont(font, lines); err != nil {
-			log.Fatal(err)
-		}
-	case "load_store":
-		loadStore()
 	default:
 		log.Println("unknown mode:", mode)
 	}
 }
 
-// 生成训练数据(4个字符组合) 243个用例
-func genGroundTruth() []string {
-	// 易混淆的字符: 0O、5S (2^4=16）
-	var tmp = make([]string, 0, 100)
-	dfs("", 4, "0O", &tmp)
-	dfs("", 4, "5S", &tmp)
-	if len(tmp) != 32 {
-		panic("len(tmp) should be 16")
-	}
-	yahei := yaheiCharset()
-	if len(yahei) != 9 {
-		panic("len(yahei) should be 9")
-	}
-	rnd := genRandomNCase(200)
-	if len(rnd) != 200 {
-		panic("len(rnd) should be 200")
-	}
-	all := []string{"FPH0", "O0JC"}
-	all = append(all, tmp...)
-	all = append(all, yahei...)
-	all = append(all, rnd...)
-	return all
+type template struct {
+	idxFile string // 索引文件
+	font    string // 使用的字体
+	// 序列生成
+	Seq    SeqGenerator // 序列生成器
+	OutDir string       // 输出目录
+	Force  bool         // 强制重写图片
 }
 
-// 模式1：生成长度为 N 的字符串
-func dfs(prefix string, n int, dict string, results *[]string) {
-	if n <= 0 {
-		*results = append(*results, prefix)
-		return
-	}
-	for _, c := range dict {
-		dfs(prefix+string(c), n-1, dict, results)
-	}
-}
-
-// 36个字符
-const allowChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
-// 模式2：全部雅黑的字符
-func yaheiCharset() []string {
-	var results []string
-	end := len(allowChars) - 4
-	for i := 0; i <= end; i += 4 {
-		// fmt.Println(allowChars[i : i+4])
-		results = append(results, allowChars[i:i+4])
-	}
-	return results
-}
-
-// 模式3：随机N个用例
-func genRandomNCase(n int) []string {
-	var results []string
-	const total = len(allowChars)
-	for i := 0; i < n; i++ {
-		var one string
-		for k := 0; k < 4; k++ {
-			c := allowChars[rand.Intn(total)]
-			one += string(c)
+// Gen 生成用例 (模型训练/识别率测试)
+// n 随机用例个数
+func (t *template) Gen(n int) []string {
+	if oldItems := loadExistedCase(t.idxFile); len(oldItems) > 0 {
+		if t.Force {
+			t.writeImg(oldItems)
 		}
-		results = append(results, one)
+		return oldItems
 	}
-	return results
+	items := t.Seq.Gen(n)
+	t.writeImg(items)
+	_ = os.WriteFile(t.idxFile, []byte(strings.Join(items, "\n")), 0777)
+	return items
+}
+
+func (t *template) writeImg(items []string) {
+	if err := genImgByFont(items, t.OutDir, t.font); err != nil {
+		panic(fmt.Sprintf("生成图片失败：%v", err))
+	}
+	log.Printf("图片写入成功: %d 条\n", len(items))
 }
