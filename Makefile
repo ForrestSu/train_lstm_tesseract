@@ -1,11 +1,14 @@
 .PHONY: clean
+RCP = rsync -avh --compress --partial --progress
 SOURCES := $(shell find * -type f -name "*.go")
+
+default: build
 
 build: $(SOURCES) go.mod
 	cd ground-truth && GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -v .
 
 sync:
-	rcp ground-truth/ground-truth  hu40:~/tools/lstm/tutorial_tesseract/
+	$(RCP) ground-truth/ground-truth  hu40:~/tools/lstm/tutorial_tesseract/
 
 # 开始训练模型
 train:
@@ -17,7 +20,7 @@ traineddata:
 
 # 将模型拷贝回本地
 copy_back:
-	rcp hu40:~/tools/lstm/tutorial_tesseract/tesstrain/data/yahei.traineddata ./
+	$(RCP) hu40:~/tools/lstm/tutorial_tesseract/tesstrain/data/yahei.traineddata ./
 
 ## rcp hu40:~/tools/lstm/tutorial_tesseract/tesstrain/data/yahei/tessdata_fast/yahei_0.000_30_1300.traineddata ./
 

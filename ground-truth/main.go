@@ -11,9 +11,9 @@ const fontYahei = "Microsoft YaHei"
 
 func main() {
 	var modeUsage = "[mode] 模式选择:\n" +
+		"- gen: 生成训练数据\n" +
 		"- pass: 识别率测试\n" +
-		"- single: 单个测试用例\n" +
-		"- gen_all: 生成训练数据\n"
+		"- single: 单个测试用例\n"
 	var mode string
 	flag.StringVar(&mode, "mode", "gen_test", modeUsage)
 	var font, lang, psm string
@@ -38,20 +38,22 @@ func main() {
 	case "single": // 单个测试用例
 		text, err := ocrText("train/0.tif", lang, psm)
 		log.Printf("err:%v text=%s\n", err, text)
-	case "gen_all":
+	case "gen":
 		lines := genGroundTruth()
 		fmt.Println("len(lines) = ", len(lines))
 		if err := genImgByFont(font, lines); err != nil {
 			log.Fatal(err)
 		}
+	case "load_store":
+		loadStore()
 	default:
 		log.Println("unknown mode:", mode)
 	}
 }
 
-// 生成训练数据(4个字符组合)
-// 易混淆的字符: 0O、5S (2^4=16）
+// 生成训练数据(4个字符组合) 243个用例
 func genGroundTruth() []string {
+	// 易混淆的字符: 0O、5S (2^4=16）
 	var tmp = make([]string, 0, 100)
 	dfs("", 4, "0O", &tmp)
 	dfs("", 4, "5S", &tmp)

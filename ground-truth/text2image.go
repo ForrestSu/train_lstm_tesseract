@@ -66,7 +66,7 @@ func text2Image(font string, trainTextFile string, outputBaseDir string) error {
 		return fmt.Errorf("调用cmd1失败! err=%v", err)
 	}
 	if stderr.Len() > 0 {
-		// fmt.Printf("提示>> %s\n", stderr.String())
+		fmt.Printf("提示>> %s\n", stderr.String())
 	}
 	return nil
 }
