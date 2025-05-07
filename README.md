@@ -1,45 +1,38 @@
-# train_lstm_tesseract
+## train_lstm_tesseract
 training lstm new font tesseract5
 
-# 1 搭建 train 环境 (ubuntu 25.04)
+## 前言
+
+使用 tesseract5 训练 lstm 模型，文本所使用字体 arial。 发现个别识别率较低，如何提高识别率？
+
+比如： `0 O` `1 I` `5 S`
+
+## 1 搭建 train 环境 (ubuntu 25.04)
+
 ```bash
 docker run -it --privileged --name tess -v ~/tools/lstm:/root/lstm sunquana/ubuntu:tesseract5 zsh
 ```
 
-# 训练
+## 2 训练
 ```bash
 make training MODEL_NAME=arial START_MODEL=best_eng TESSDATA=/usr/share/tesseract-ocr/5/tessdata  MAX_ITERATIONS=10000
 ```
 
-## 识别率对比
-| 模型    | 训练数据图片 | 测试数据图片 | pass_rate |
-|-------|--------|--------|-----------|
-| eng   | ---    | 200张   | 76.50%    |
-| arial | 243张   | 200张   | 92.0%     |
+## 3 识别率对比
 
+- 使用默认的PSM = 13训练
 
-```bash
-> ➜ ground-truth git:(main) ./ground-truth -mode pass -lang arial
-2025/05/06 22:33:09 加载已有的测试用例: 200 条
-progress 0% pass: 1/1, pass rate 100.00%
-case:9, real=OJ00, got=0J00
-case:16, real=2AOD, got=2A0D
-progress 25% pass: 49/51, pass rate 96.08%
-case:53, real=O033, got=0033
-case:60, real=3OAU, got=30AU
-case:87, real=LO76, got=L076
-progress 50% pass: 96/101, pass rate 95.05%
-case:128, real=4ZI5, got=4Z15
-case:133, real=J0H7, got=JOH7
-case:135, real=72YO, got=72Y0
-case:150, real=B0E7, got=BOE7
-progress 75% pass: 142/151, pass rate 94.04%
-case:165, real=UL0P, got=ULOP
-case:166, real=U6O4, got=U604
-case:171, real=0O0L, got=000L
-case:172, real=IZE7, got=1ZE7
-case:176, real=O4QM, got=04QM
-case:177, real=D1UW, got=DIUW
-case:188, real=14O6, got=1406
-pass=184, total=200, pass rate 92.00%
-```
+| 模型    | 训练数据图片 | 测试数据图片 | psm | pass_rate |
+|-------|--------|--------|-----|-----------|
+| eng   | ---    | 200张   | 7   | 75%       |
+| eng   | ---    | 200张   | 13  | 84%       |
+| arial | 243张   | 200张   | 7   | 94.5%     |
+| arial | 243张   | 200张   | 13  | 92%       |
+
+### 3.1 优化方向
+[x] 指定识别模式 --user-patterns。 
+[ ] 提高训练的数据集 (200->1000)
+    下载1000张真实数据，用于训练。 再下载1000张真实数据，用于测试准确率。
+
+## 参考文档
+- [OCR 100% accuracy of digital data](https://www.monperrus.net/martin/perfect-ocr-digital-data)

@@ -2,6 +2,7 @@
 RCP = rsync -avh --compress --partial --progress
 SOURCES := $(shell find * -type f -name "*.go")
 ModelName = arial
+InstallDir = /opt/homebrew/share/tessdata/
 
 default: build
 
@@ -12,16 +13,19 @@ sync:
 	$(RCP) ground-truth/ground-truth  hu40:~/tools/lstm/tutorial_tesseract/
 
 # 开始训练模型
+# 准备工作： best/eng.traineddata 拷贝到 ../tesseract/tessdata 目录下
+#   DEBUG_INTERVAL=-1  # 每迭代一次，打印一次日志
+#   PSM=13 # 单行文本
 train:
-	make training MODEL_NAME=$(ModelName) START_MODEL=best_eng TESSDATA=/usr/share/tesseract-ocr/5/tessdata  MAX_ITERATIONS=10000
+	 TESSDATA_PREFIX=../tesseract/tessdata  make training MODEL_NAME=arial START_MODEL=eng TESSDATA=../tesseract/tessdata  MAX_ITERATIONS=10000
 
 # 生成模型(best fast)
 traineddata:
 	make traineddata  MODEL_NAME=$(ModelName)
 
 # 将模型拷贝回本地
-copy_back:
-	$(RCP) hu40:~/tools/lstm/tutorial_tesseract/tesstrain/data/$(ModelName).traineddata ./
+copy_back_install:
+	$(RCP) hu40:~/tools/lstm/tutorial_tesseract/tesstrain/data/$(ModelName).traineddata $(InstallDir)
 
 ## rcp hu40:~/tools/lstm/tutorial_tesseract/tesstrain/data/$(ModelName)/tessdata_fast/arial_0.000_30_1300.traineddata ./
 

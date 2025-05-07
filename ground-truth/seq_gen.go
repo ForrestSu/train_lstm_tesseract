@@ -44,30 +44,31 @@ type SeqGenerator interface {
 	Gen(n int) []string
 }
 
-// 生成训练数据(4个字符组合) 243个用例
+// 生成训练数据(4个字符组合) 259个用例
 type groundTruthSeq struct{}
 
 // Gen implements SeqGenerator
 func (groundTruthSeq) Gen(randCnt int) []string {
+	// 全量字符集
+	myFont := myFontCharset()
+	if len(myFont) != 9 {
+		panic("len(MyFont) should be 9")
+	}
 	// 易混淆的字符: 0O、5S (2^4=16）
 	var tmp = make([]string, 0, 100)
 	dfs("", 4, "0O", &tmp)
 	dfs("", 4, "5S", &tmp)
-	if len(tmp) != 32 {
-		panic("len(tmp) should be 16")
-	}
-	myFont := myFontCharset()
-	if len(myFont) != 9 {
-		panic("len(MyFont) should be 9")
+	dfs("", 4, "1I", &tmp)
+	if len(tmp) != 48 {
+		panic("len(tmp) should be 48")
 	}
 	rnd := randomSeq{}.Gen(randCnt)
 	if len(rnd) != randCnt {
 		panic(fmt.Errorf("len(rnd) should be %d", randCnt))
 	}
-	all := []string{"FPH0", "O0JC"}
-	all = append(all, tmp...)
-	all = append(all, myFont...)
+	all := append(myFont, tmp...)
 	all = append(all, rnd...)
+	all = append(all, "FPH0", "O0JC")
 	log.Printf("生成新训练数据: %d 条\n", len(all))
 	return all
 }

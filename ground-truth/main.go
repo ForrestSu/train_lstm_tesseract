@@ -11,12 +11,12 @@ import (
 func main() {
 	var modeUsage = "[mode] 模式选择:\n" +
 		"- gen: 生成训练数据\n" +
-		"- pass: 识别率测试\n" +
+		"- eval: 识别率评估\n" +
 		"- single: 单个测试用例\n"
 	var mode string
 	flag.StringVar(&mode, "mode", "gen", modeUsage)
 	var font string
-	flag.StringVar(&font, "font", "Arial", "使用字体 [gen]")
+	flag.StringVar(&font, "font", "Arial Regular", "使用字体 [gen]")
 	var n int
 	flag.IntVar(&n, "n", 200, "随机用例个数 [gen]")
 	var force bool
@@ -37,7 +37,8 @@ func main() {
 			Force:   force,
 		}
 		tpl.Gen(n)
-	case "pass": // 识别率测试
+	case "eval": // 识别率评估
+		fmt.Printf(">>> Lang:%s PSM=%s...\n", lang, psm)
 		tpl := template{
 			idxFile: "random_case.txt",
 			font:    font,

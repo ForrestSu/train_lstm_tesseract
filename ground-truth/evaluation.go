@@ -21,7 +21,7 @@ func passRate(dir string, items []string, lang string, psm string) error {
 		if text == one {
 			pass++
 		} else {
-			fmt.Printf("failure! k=%d (expected=%s, got=%s)\n", k, one, text)
+			fmt.Printf("FAIL: k=%d (expected=%s, got=%s)\n", k, one, text)
 		}
 		var cnt = k + 1
 		if (cnt)%50 == 0 {
@@ -38,7 +38,9 @@ const limited = "tessedit_char_whitelist=" + allowChars
 
 func ocrText(fileName string, lang string, psm string) (string, error) {
 	// fmt.Println(">>> " + fileName)
-	args := []string{fileName, "stdout", "-c", limited, "-l", lang, "--psm", psm, "quiet"}
+	args := []string{fileName, "stdout", "-c", limited, "-l", lang, "--psm", psm}
+	args = append(args, "--user-patterns", "my.patterns")
+	args = append(args, "quiet")
 	cmd := exec.Command("tesseract", args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
