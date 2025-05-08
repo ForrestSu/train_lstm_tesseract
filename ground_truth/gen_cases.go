@@ -11,11 +11,6 @@ type IGenerator interface {
 	Gen(n int) []string
 }
 
-var (
-	GenAmbiguous IGenerator = ambiguousGen{}
-	GenRandom    IGenerator = randomGen{}
-)
-
 // 生成训练数据(4个字符组合) 259个用例
 type ambiguousGen struct{}
 

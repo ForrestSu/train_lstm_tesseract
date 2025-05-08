@@ -7,15 +7,16 @@ import (
 	"strings"
 )
 
-// NewTemplate 创建模板
-func NewTemplate(idxFile string, font string, seq IGenerator, outDir string, force bool) *Template {
-	return &Template{
-		idxFile: idxFile,
-		font:    font,
-		Seq:     seq,
-		OutDir:  outDir,
-		Force:   force,
-	}
+// NewRandom 随机用例生成
+func NewRandom(idxFile string, font string, outDir string, force bool) *Template {
+	seq := randomGen{}
+	return &Template{idxFile: idxFile, font: font, Seq: seq, OutDir: outDir, Force: force}
+}
+
+// NewAmbiguous 易混淆用例生成
+func NewAmbiguous(idxFile string, font string, outDir string, force bool) *Template {
+	seq := ambiguousGen{}
+	return &Template{idxFile: idxFile, font: font, Seq: seq, OutDir: outDir, Force: force}
 }
 
 type Template struct {

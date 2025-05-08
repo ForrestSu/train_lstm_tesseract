@@ -21,7 +21,7 @@ func genImgByFont(lines []string, outDir string, font string) error {
 		trainTextFile := baseName + ".gt.txt"
 		// 写入文本行到文件
 		if err := os.WriteFile(trainTextFile, []byte(line), 0644); err != nil {
-			return fmt.Errorf("写入训练文本失败: %w", err)
+			return fmt.Errorf("写入训练文本失败: %v", err)
 		}
 		if err := text2Image(font, trainTextFile, baseName); err != nil {
 			return err
