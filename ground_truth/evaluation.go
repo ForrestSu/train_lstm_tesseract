@@ -1,4 +1,4 @@
-package main
+package groundtruth
 
 import (
 	"bytes"
@@ -7,14 +7,14 @@ import (
 	"strings"
 )
 
-// 通过率测试
-func passRate(dir string, items []string, lang string, psm string) error {
+// PassRate 通过率测试
+func PassRate(dir string, items []string, lang string, psm string) error {
 	var pass int
 	var total = len(items)
 	dir = strings.TrimSuffix(dir, "/")
 	for k, one := range items {
 		baseName := fmt.Sprintf("%s/eng_%03d_%s", dir, k, one)
-		text, err := ocrText(baseName+".tif", lang, psm)
+		text, err := OcrText(baseName+".tif", lang, psm)
 		if err != nil {
 			return err
 		}
@@ -36,7 +36,7 @@ func passRate(dir string, items []string, lang string, psm string) error {
 
 const limited = "tessedit_char_whitelist=" + allowChars
 
-func ocrText(fileName string, lang string, psm string) (string, error) {
+func OcrText(fileName string, lang string, psm string) (string, error) {
 	// fmt.Println(">>> " + fileName)
 	args := []string{fileName, "stdout", "-c", limited, "-l", lang, "--psm", psm}
 	args = append(args, "--user-patterns", "my.patterns")

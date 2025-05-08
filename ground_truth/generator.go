@@ -1,54 +1,26 @@
-package main
+package groundtruth
 
 import (
 	"fmt"
 	"log"
 	"math/rand"
-	"os"
-	"strings"
 )
 
-// 加载已有的测试用例
-func loadExistedCase(fileName string) []string {
-	// 文件存在，读取文件内容
-	_, err := os.Stat(fileName)
-	if err != nil {
-		return nil
-	}
-	// 读取文件内容
-	content, err := os.ReadFile(fileName)
-	if err != nil {
-		log.Fatalf("读取文件失败:%v", err)
-		return nil
-	}
-	list := strings.Split(string(content), "\n")
-	items := skipEmpty(list)
-	log.Printf("加载已有的测试用例: %d 条\n", len(items))
-	return items
-}
-
-// 可选：过滤空行
-func skipEmpty(list []string) []string {
-	items := make([]string, 0, len(list))
-	for _, item := range list {
-		trim := strings.TrimSpace(item)
-		if trim != "" {
-			items = append(items, trim)
-		}
-	}
-	return items
-}
-
-// SeqGenerator 序列生成器
-type SeqGenerator interface {
+// IGenerator 序列生成器
+type IGenerator interface {
 	Gen(n int) []string
 }
 
+var (
+	GenAmbiguous IGenerator = ambiguousGen{}
+	GenRandom    IGenerator = randomGen{}
+)
+
 // 生成训练数据(4个字符组合) 259个用例
-type groundTruthSeq struct{}
+type ambiguousGen struct{}
 
 // Gen implements SeqGenerator
-func (groundTruthSeq) Gen(randCnt int) []string {
+func (ambiguousGen) Gen(randCnt int) []string {
 	// 全量字符集
 	myFont := myFontCharset()
 	if len(myFont) != 9 {
@@ -62,7 +34,7 @@ func (groundTruthSeq) Gen(randCnt int) []string {
 	if len(tmp) != 48 {
 		panic("len(tmp) should be 48")
 	}
-	rnd := randomSeq{}.Gen(randCnt)
+	rnd := randomGen{}.Gen(randCnt)
 	if len(rnd) != randCnt {
 		panic(fmt.Errorf("len(rnd) should be %d", randCnt))
 	}
@@ -98,9 +70,9 @@ func myFontCharset() []string {
 }
 
 // 模式3：随机N个用例
-type randomSeq struct{}
+type randomGen struct{}
 
-func (randomSeq) Gen(n int) []string {
+func (randomGen) Gen(n int) []string {
 	var results []string
 	const total = len(allowChars)
 	for i := 0; i < n; i++ {

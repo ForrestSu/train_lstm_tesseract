@@ -7,10 +7,11 @@ InstallDir = /opt/homebrew/share/tessdata/
 default: build
 
 build: $(SOURCES) go.mod
-	cd ground-truth && GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -v .
+	go build -ldflags "-s -w" -v -o ground-truth .
 
 sync:
-	$(RCP) ground-truth/ground-truth  hu40:~/tools/lstm/tutorial_tesseract/
+	GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -v -o ground-truth .
+	$(RCP) ground-truth  hu40:~/tools/lstm/tutorial_tesseract/
 
 # 开始训练模型
 # 准备工作： best/eng.traineddata 拷贝到 ../tesseract/tessdata 目录下
