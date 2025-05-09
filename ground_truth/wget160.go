@@ -24,6 +24,7 @@ func (t *H160) Gen(n int) []string {
 	if oldItems := loadExistedCase(t.idxFile); len(oldItems) > 0 {
 		return oldItems
 	}
+	t.outDir = strings.TrimSuffix(t.outDir, "/")
 	err := writeImg(t.outDir, n)
 	if err != nil {
 		panic(err)
@@ -37,7 +38,6 @@ func writeImg(outDir string, n int) error {
 	if err := os.MkdirAll(outDir, 0777); err != nil {
 		return err
 	}
-	outDir = strings.TrimSuffix(outDir, "/")
 	for i := 0; i < n; i++ {
 		data, err := parseCaptcha()
 		if err != nil {
@@ -46,11 +46,6 @@ func writeImg(outDir string, n int) error {
 		code := data.CaptchaCode()
 		// 生成输出文件基础名
 		baseName := fmt.Sprintf("%s/eng_%03d_%s", outDir, i, code)
-		// 训练的文本文件
-		trainTextFile := baseName + ".gt.txt"
-		if err := os.WriteFile(trainTextFile, []byte(code), 0777); err != nil {
-			return fmt.Errorf("写入训练文本失败: %v", err)
-		}
 		// move cap.png to outDir
 		if err := os.Rename("cap.png", baseName+".png"); err != nil {
 			return fmt.Errorf("移动文件失败: %v", err)

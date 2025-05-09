@@ -23,6 +23,7 @@ go.work.sum
 ground-truth
 train_lstm_tesseract
 fonts.conf
+*.log
 
 /tesstrain/
 /img/
