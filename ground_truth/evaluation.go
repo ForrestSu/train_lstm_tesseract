@@ -3,25 +3,35 @@ package groundtruth
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"slices"
 	"strings"
 )
 
 // PassRate 通过率测试
-func PassRate(dir string, items []string, lang string, psm string) error {
+func PassRate(dir string, lang string, psm string) error {
+	imgFiles, err := travelImg(dir)
+	if err != nil {
+		return err
+	}
 	var pass int
-	var total = len(items)
-	dir = strings.TrimSuffix(dir, "/")
-	for k, one := range items {
-		baseName := fmt.Sprintf("%s/eng_%03d_%s", dir, k, one)
-		text, err := OcrText(baseName+".tif", lang, psm)
+	var total = len(imgFiles)
+	fmt.Printf("加载到 %d 个图片文件\n", total)
+	for k, fileName := range imgFiles {
+		var truth = parseTruth(fileName)
+		if len(truth) != 4 {
+			return fmt.Errorf("fileName: %s 非法的文件名！k=%d", fileName, k)
+		}
+		gotText, err := OcrText(fileName, lang, psm)
 		if err != nil {
 			return err
 		}
-		if text == one {
+		if gotText == truth {
 			pass++
 		} else {
-			fmt.Printf("FAIL: k=%d (expected=%s, got=%s)\n", k, one, text)
+			fmt.Printf("FAIL: k=%d (expected=%s, got=%s)\n", k, truth, gotText)
 		}
 		var cnt = k + 1
 		if (cnt)%50 == 0 {
@@ -32,6 +42,43 @@ func PassRate(dir string, items []string, lang string, psm string) error {
 	}
 	fmt.Printf("pass=%d, total=%d, pass rate %.2f%%\n", pass, total, float32(pass)/float32(total)*100)
 	return nil
+}
+
+func travelImg(dir string) ([]string, error) {
+	var imgFiles []string
+	// 递归遍历目录
+	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		extName := strings.ToLower(filepath.Ext(path))
+		if slices.Contains([]string{".png", ".jpg", ".tif"}, extName) {
+			imgFiles = append(imgFiles, path)
+			// fmt.Println(">> " + path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return imgFiles, nil
+}
+
+// eng_000_P5SY.png
+func parseTruth(fileName string) string {
+	baseName := filepath.Base(fileName)
+	end := strings.LastIndex(baseName, ".")
+	if end < 0 {
+		return ""
+	}
+	start := strings.LastIndex(baseName, "_")
+	if start < 0 {
+		return ""
+	}
+	return baseName[start+1 : end]
 }
 
 const limited = "tessedit_char_whitelist=" + allowChars

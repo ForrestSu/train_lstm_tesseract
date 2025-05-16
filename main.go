@@ -15,7 +15,7 @@ func main() {
 		"- eval: 识别率评估\n" +
 		"- single: 单个测试用例\n"
 	var mode string
-	flag.StringVar(&mode, "mode", "real", modeUsage)
+	flag.StringVar(&mode, "mode", "eval", modeUsage)
 	// 生成数据
 	var font string
 	var n int
@@ -40,7 +40,8 @@ func main() {
 		tpl.Gen(n)
 	case "eval": // 识别率评估
 		fmt.Printf(">>> Lang:%s PSM=%s TestDir=[%s]...\n", lang, psm, testDir)
-		if err := groundtruth.PassRate(tpl.OutDir, lines, lang, psm); err != nil {
+		testDir = "tesstrain/data/arial-ground-truth/"
+		if err := groundtruth.PassRate(testDir, lang, psm); err != nil {
 			log.Fatal(err)
 		}
 	case "real":
