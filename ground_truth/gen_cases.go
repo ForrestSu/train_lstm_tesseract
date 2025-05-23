@@ -11,7 +11,7 @@ type IGenerator interface {
 	Gen(n int) []string
 }
 
-// 生成训练数据(4个字符组合) 259个用例
+// 生成训练数据(4个字符组合) 275个用例
 type ambiguousGen struct{}
 
 // Gen implements SeqGenerator
@@ -26,7 +26,8 @@ func (ambiguousGen) Gen(randCnt int) []string {
 	dfs("", 4, "0O", &tmp)
 	dfs("", 4, "5S", &tmp)
 	dfs("", 4, "1I", &tmp)
-	if len(tmp) != 48 {
+	dfs("", 4, "CG", &tmp)
+	if len(tmp) != 64 {
 		panic("len(tmp) should be 48")
 	}
 	rnd := randomGen{}.Gen(randCnt)

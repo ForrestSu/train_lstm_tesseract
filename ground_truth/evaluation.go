@@ -20,18 +20,18 @@ func PassRate(dir string, lang string, psm string) error {
 	var total = len(imgFiles)
 	fmt.Printf("加载到 %d 个图片文件\n", total)
 	for k, fileName := range imgFiles {
-		var truth = parseTruth(fileName)
-		if len(truth) != 4 {
+		var code = parseCode(fileName)
+		if len(code) != 4 {
 			return fmt.Errorf("fileName: %s 非法的文件名！k=%d", fileName, k)
 		}
 		gotText, err := OcrText(fileName, lang, psm)
 		if err != nil {
 			return err
 		}
-		if gotText == truth {
+		if gotText == code {
 			pass++
 		} else {
-			fmt.Printf("FAIL: k=%d (expected=%s, got=%s)\n", k, truth, gotText)
+			fmt.Printf("FAIL: k=%d (expected=%s, got=%s)\n", k, code, gotText)
 		}
 		var cnt = k + 1
 		if (cnt)%50 == 0 {
@@ -68,7 +68,7 @@ func travelImg(dir string) ([]string, error) {
 }
 
 // eng_000_P5SY.png
-func parseTruth(fileName string) string {
+func parseCode(fileName string) string {
 	baseName := filepath.Base(fileName)
 	end := strings.LastIndex(baseName, ".")
 	if end < 0 {
